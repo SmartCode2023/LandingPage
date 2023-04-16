@@ -4,6 +4,7 @@ import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
+import axios from "axios";
 
 const CotizacionForm = ({ setStep, setCotizacion }) => {
   const [fechaViaje, setFechaViaje] = useState("");
@@ -17,23 +18,46 @@ const CotizacionForm = ({ setStep, setCotizacion }) => {
   const [condiciones, setCondiciones] = useState("");
   const [isCarga, setIsCarga] = useState("si");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newCotizacion = {
       fechaViaje: fechaViaje,
       dirOrigen: dirOrigen,
-      dirEntrega: dirEntrega,
+      dirDestino: dirEntrega,
       peso: +peso,
       alto: +alto,
       ancho: +ancho,
       largo: +largo,
       tipo: tipo,
       condiciones: condiciones,
-      isCarga: isCarga,
+      servicioCarga: isCarga,
     };
-    setCotizacion(newCotizacion);
+    const cotizacion = await axios.post(
+      "http://localhost:5000/api/v1/cotizaciones",
+      newCotizacion
+    );
+    setCotizacion(cotizacion.data.cotizacion);
     setStep(1);
   };
+
+  const calcularFecha = () =>{
+    const objectDate = new Date();
+    const actualMonth = objectDate.getMonth() + 1
+    const day =
+    objectDate.getDate() < 10
+      ? "0" + objectDate.getDate()
+      : objectDate.getDate();
+    const month =
+      objectDate.getMonth() + 1 < 10
+        ? "0" + actualMonth
+        : actualMonth
+    const year = objectDate.getFullYear();
+
+    const today = year + "-" + month + "-" + day;
+
+    return today;
+
+  }
 
   return (
     <div>
@@ -54,6 +78,7 @@ const CotizacionForm = ({ setStep, setCotizacion }) => {
               <Form.Control
                 className="w-100"
                 type="date"
+                min={calcularFecha()}
                 value={fechaViaje}
                 onChange={(e) => setFechaViaje(e.target.value)}
               />
@@ -164,9 +189,12 @@ const CotizacionForm = ({ setStep, setCotizacion }) => {
                 onChange={(e) => setTipo(e.target.value)}
               >
                 <option>Seleccione una opción...</option>
-                <option value="1">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option>
+                <option value="seca">Seca</option>
+                <option value="refrigerada">Refrigerada</option>
+                <option value="granel">Granel</option>
+                <option value="contenedores">Contenedores</option>
+                <option value="especializada">Especializada</option>
+                <option value="sobredimensiones">Sobredimensiones</option>
               </Form.Select>{" "}
             </Col>
           </Row>
@@ -180,15 +208,12 @@ const CotizacionForm = ({ setStep, setCotizacion }) => {
               </Form.Label>
             </Col>
             <Col>
-              <Form.Select
-                aria-label="Seleccione una opción..."
+              <Form.Control
+                className="w-100"
+                type="text"
+                value={condiciones}
                 onChange={(e) => setCondiciones(e.target.value)}
-              >
-                <option>Seleccione una opción...</option>
-                <option value="1">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option>
-              </Form.Select>{" "}
+              />
             </Col>
           </Row>
         </Form.Group>
